@@ -2,7 +2,7 @@
   "name": "relexer",
   "version": "1.0.0",
   "description": "A regular expression based lexer for javascript and node.js streams",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "build:watch": "tsc -w -p tsconfig.json",
@@ -20,6 +20,9 @@
     "typescript": "^2.6.1"
   },
   "dependencies": {},
+  "files": [
+    "dist"
+  ],
   "directories": {
     "test": "test"
   },
