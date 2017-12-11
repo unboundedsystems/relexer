@@ -1,4 +1,4 @@
-#!/bin/bash
-
-IMAGE=node:8
-. $(dirname $0)/../containit/containit.sh
+#!/usr/bin/env bash
+IMAGE="node:8"
+BIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+. "${BIN_DIR}/../containit/containit.sh"
