@@ -1,6 +1,7 @@
 import * as stream from 'stream';
 import * as sb from 'stream-buffers';
 import * as util from 'util';
+import * as makeError from 'make-error';
 
 export type Action = (match: string, pos: number) => Promise<void>;
 
@@ -10,9 +11,8 @@ export interface Rule {
 }
 
 export type Rules = Rule[];
-export type Lexer = (ins: stream.Readable) => Promise<void>;
 
-export class RuleError extends Error {
+export class RuleError extends makeError.BaseError {
     constructor(private msg_: string,
         readonly ruleIndex: string,
         readonly char: number) { super(); }
@@ -41,22 +41,45 @@ function checkRules(rules: Rules) {
     }
 }
 
-class LexError extends Error {
-    constructor(msg: string,
-        readonly start: number,
-        readonly end?: number,
-        readonly text?: string) {
-        super(msg);
+class LexError extends makeError.BaseError {
+    constructor(public readonly msg: string,
+        public readonly start: number,
+        public readonly end?: number,
+        public readonly text?: string) {
+        super(LexError.makeMessage(msg, start, end, text));
+    }
+
+    private static makeMessage(msg: string, start: number, end?: number, text?: string) {
+        let ret = msg + ": ";
+        let dets: { start: number, end?: number, text?: string } = { start: start };
+        if (end) {
+            dets.end = end;
+        }
+        if (text) {
+            dets.text = text;
+        }
+        return ret + JSON.stringify(dets);
     }
 }
 
-export function create<T>(rules: Rules): Lexer {
-    checkRules(rules);
+export interface Lexer {
+    lex(ins: stream.Readable): Promise<void>
+    regexString(): string; //Regex being used to lex
+}
 
-    const expStr = rules.map((r) => '(' + r.re + ')').join('|');
-    const exp = new RegExp(expStr, "g");
+class LexerImpl implements Lexer {
+    private expStr_: string;
 
-    return async (ins: stream.Readable) => {
+    constructor(private rules_: Rules) {
+        //FIXME(manishv) deep copy rules here so that user cannot change them and screw up the lexer
+        this.expStr_ = rules_.map((r) => '(' + r.re + ')').join('|');
+    }
+
+    async lex(ins: stream.Readable) : Promise<void> {
+        //Create a new RegExp so this function is re-entrant
+        const exp = new RegExp(this.expStr_, "g");
+        const rules = this.rules_;
+
         //FIXME(manishv) This should not buffer
         const buf = new sb.WritableStreamBuffer();
         ins.pipe(buf);
@@ -83,4 +106,11 @@ export function create<T>(rules: Rules): Lexer {
             } while (m && exp.lastIndex != s.length)
         });
     }
+
+    regexString() { return this.expStr_; }
+}
+
+export function create<T>(rules: Rules): Lexer {
+    checkRules(rules);
+    return new LexerImpl(rules);
 }
