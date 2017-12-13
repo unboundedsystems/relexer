@@ -2,6 +2,7 @@ import * as stream from 'stream';
 import * as sb from 'stream-buffers';
 import * as util from 'util';
 import * as makeError from 'make-error';
+import { StringDecoder } from 'string_decoder';
 
 export type Action = (match: string, pos: number) => Promise<void>;
 
@@ -62,9 +63,55 @@ class LexError extends makeError.BaseError {
     }
 }
 
+export interface LexOptions {
+    aggregateUntil?: number;
+    encoding?: string;
+}
+
 export interface Lexer {
-    lex(ins: stream.Readable): Promise<void>
+    lex(ins: stream.Readable, options?: LexOptions): Promise<void>
     regexString(): string; //Regex being used to lex
+}
+
+
+async function processChunk(exp: RegExp, rules: Rules, offset: number, s: string): Promise<number> {
+    let m = null;
+    do {
+        let oldIndex = exp.lastIndex;
+        m = exp.exec(s);
+        if (!m) {
+            return oldIndex;
+        }
+
+        //We have a match, find out which rule matched
+        for (let i = 0; i < rules.length; i++) {
+            if (m[i + 1] !== undefined) {
+                await rules[i].action(m[i + 1], m['index'] + offset);
+                break;
+            }
+        }
+    } while (m && exp.lastIndex != s.length);
+    return exp.lastIndex;
+}
+
+function dataStream(ins: stream.Readable, f: (data: Buffer) => Promise<void>) {
+    const ret = new Promise((resolve, reject) => {
+        ins.on('data', (chunk: Buffer) => {
+            (async () => {
+                ins.pause(); //This blocks data and end events
+                try {
+                    await f(chunk);
+                } catch (e) {
+                    reject(e);
+                }
+                ins.resume();
+            })();
+        });
+
+        ins.on('end', () => resolve());
+    });
+
+    return ret;
 }
 
 class LexerImpl implements Lexer {
@@ -75,42 +122,48 @@ class LexerImpl implements Lexer {
         this.expStr_ = rules_.map((r) => '(' + r.re + ')').join('|');
     }
 
-    async lex(ins: stream.Readable) : Promise<void> {
-        //Create a new RegExp so this function is re-entrant
+    //aggregateUntil is characters not bytes, relevant for multi-byte UTF-8
+    async lex(ins: stream.Readable, optionsIn?: LexOptions): Promise<void> {
+        const options: LexOptions = Object.assign({}, optionsIn, {
+            aggregateUntil: 1024,
+            encoding: 'utf-8'
+        });
+        //Create a new state (e.g., string decoder, RegExp) so this function is re-entrant
         const exp = new RegExp(this.expStr_, "g");
         const rules = this.rules_;
+        const decode = new StringDecoder(options.encoding);
 
-        //FIXME(manishv) This should not buffer
-        const buf = new sb.WritableStreamBuffer();
-        ins.pipe(buf);
-        const onEnd = util.promisify((cb) => ins.on('end', cb));
+        let buf = "";
+        let offset = 0;
+        await dataStream(ins, async (chunk: Buffer) => {
+            const newChars = decode.write(chunk);
+            if ((chunk.length > 0) && (newChars.length == 0)) {
+                return;
+            }
+            buf += newChars;
 
-        return onEnd().then(async () => {
-            const s = buf.getContentsAsString();
-            let m = null;
-            do {
-                let oldIndex = exp.lastIndex;
-                m = exp.exec(s);
-                if (!m) {
-                    throw new LexError("No token matched", oldIndex);
-                }
+            exp.lastIndex = 0; //parse from start of buf
 
-                //We have a match, find out which rule matched
-                for (let i = 0; i < rules.length; i++) {
+            let consumed = await processChunk(exp, rules, offset, buf);
+            buf = buf.slice(consumed);
+            offset += consumed;
 
-                    if (m[i + 1] !== undefined) {
-                        await rules[i].action(m[i + 1], m['index']);
-                        break;
-                    }
-                }
-            } while (m && exp.lastIndex != s.length)
+            if (buf.length > options.aggregateUntil) {
+                throw new LexError("No rule matched", offset, offset + buf.length, buf);
+            }
         });
+
+        if (buf.length === 0) {
+            return;
+        }
+
+        throw new LexError("No rule matched", offset, offset + buf.length, buf);
     }
 
     regexString() { return this.expStr_; }
 }
 
-export function create<T>(rules: Rules): Lexer {
+export function create(rules: Rules): Lexer {
     checkRules(rules);
     return new LexerImpl(rules);
 }
