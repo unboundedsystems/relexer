@@ -81,18 +81,18 @@ async function processChunk(exp: RegExp, rules: Rules, offset: number, s: string
         if (!m) {
             return oldIndex;
         }
-
-        if (m["index"] != oldIndex) {
+        
+        if (m.index != oldIndex) {
             throw new LexError("No rule matched",
                 oldIndex + offset,
-                m["index"] + offset,
-                s.slice(oldIndex, m["index"]));
+                m.index + offset,
+                s.slice(oldIndex, m.index));
         }
 
         //We have a match, find out which rule matched
         for (let i = 0; i < rules.length; i++) {
             if (m[i + 1] !== undefined) {
-                await rules[i].action(m[i + 1], m['index'] + offset);
+                await rules[i].action(m[i + 1], m.index + offset);
                 break;
             }
         }
