@@ -42,7 +42,7 @@ function checkRules(rules: Rules) {
     }
 }
 
-class LexError extends makeError.BaseError {
+export class LexError extends makeError.BaseError {
     constructor(public readonly msg: string,
         public readonly start: number,
         public readonly end?: number,
@@ -81,6 +81,13 @@ async function processChunk(exp: RegExp, rules: Rules, offset: number, s: string
         m = exp.exec(s);
         if (!m) {
             return oldIndex;
+        }
+
+        if (m["index"] != oldIndex) {
+            throw new LexError("No rule matched",
+                oldIndex + offset,
+                m["index"] + offset,
+                s.slice(oldIndex, m["index"]));
         }
 
         //We have a match, find out which rule matched
@@ -124,10 +131,10 @@ class LexerImpl implements Lexer {
 
     //aggregateUntil is characters not bytes, relevant for multi-byte UTF-8
     async lex(ins: stream.Readable, optionsIn?: LexOptions): Promise<void> {
-        const options: LexOptions = Object.assign({}, optionsIn, {
+        const options: LexOptions = Object.assign({}, {
             aggregateUntil: 1024,
             encoding: 'utf-8'
-        });
+        }, optionsIn);
         //Create a new state (e.g., string decoder, RegExp) so this function is re-entrant
         const exp = new RegExp(this.expStr_, "g");
         const rules = this.rules_;
@@ -148,7 +155,7 @@ class LexerImpl implements Lexer {
             buf = buf.slice(consumed);
             offset += consumed;
 
-            if (buf.length > options.aggregateUntil) {
+            if (buf.length >= options.aggregateUntil) {
                 throw new LexError("No rule matched", offset, offset + buf.length, buf);
             }
         });
@@ -157,7 +164,7 @@ class LexerImpl implements Lexer {
             return;
         }
 
-        throw new LexError("No rule matched", offset, offset + buf.length, buf);
+        throw new LexError("No rule matched at end of data", offset, offset + buf.length, buf);
     }
 
     regexString() { return this.expStr_; }
