@@ -1,5 +1,4 @@
 import * as stream from 'stream';
-import * as sb from 'stream-buffers';
 import * as util from 'util';
 import * as makeError from 'make-error';
 import { StringDecoder } from 'string_decoder';
