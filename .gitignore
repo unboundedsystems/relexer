@@ -4,5 +4,7 @@
 node_modules
 *.log
 npm-debug.log.*
+*.bak
 dist
+
 

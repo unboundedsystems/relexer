@@ -1,6 +1,7 @@
 import * as relexer from "..";
 import * as sb from "stream-buffers";
 import * as util from 'util';
+import * as stream from 'stream';
 import { read } from "fs";
 
 type Token = { text: string, pos: number };
@@ -237,3 +238,28 @@ describe('Chunked Stream', () => {
         }
     });
 });
+
+describe('Quick Start Example', () => {
+    async function example(s: stream.Readable): Promise<string> {
+        let tokens: string[] = [];
+
+        const rules: relexer.Rules = [
+            //Match one-or-more non-whitepsace characters
+            { re: "[^\\s]+", action: async (match, pos) => { tokens.push(match); } },
+            //Ignore whitespace
+            { re: "\\s+", action: async (match, pos) => { } }
+        ];
+
+        const lexer = relexer.create(rules);
+
+        await lexer.lex(s);
+        return util.inspect(tokens);
+    }
+
+    it('should work', async () => {
+        const s = new sb.ReadableStreamBuffer();
+        putOnTick(s, 'Hello, how are you today?');
+        const toks = await example(s);
+        toks.should.equal("[ 'Hello,', 'how', 'are', 'you', 'today?' ]");
+    })
+})
