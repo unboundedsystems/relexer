@@ -86,7 +86,7 @@ lexer.lex(process.stdin, { aggregateUntil: 10 });
 In this case, no more than 10 bytes will be buffered, and
 so any tokens longer than 10 characters may not come back as a match.
 However, because the stream can return chunks larger than the
-aggregateUntil limit, there may be cases were relexer can return
+`aggregateUntil` limit, there may be cases were relexer can return
 larger tokens.
 
 To continue the quick start example with an `aggregateUntil` limit of
@@ -96,11 +96,11 @@ Instead, `lex` will reject its promise with a `No rules matched` exception.
 However, if the stream returns the token in an 11 or more byte chunk, relexer
 will match `01234567890`.
 
-Generally you should set aggregateUntil to a value large enough for the
+Generally you should set `aggregateUntil` to a value large enough for the
 largest expected token size, but small enough that no issues will
 arise if relexer has to fill a buffer of that size.
 
-The default aggregateUntil limit is 1024 bytes which should suffice
+The default `aggregateUntil` limit is 1024 bytes which should suffice
 for most applications.
 
 ## More information
