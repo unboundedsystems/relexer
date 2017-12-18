@@ -4,8 +4,10 @@
   "description": "A regular expression based lexer for javascript and node.js streams",
   "main": "dist/index.js",
   "scripts": {
+    "pretest": "npm run build",
     "build": "tsc -p tsconfig.json",
     "build:watch": "tsc -w -p tsconfig.json",
+    "prepare": "npm run build",
     "test": "mocha --require should dist/test"
   },
   "author": "Manish Vachharajani <manishv@unbounded.systems>",
