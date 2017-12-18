@@ -1,4 +1,6 @@
 # Relexer
+[![Build Status](https://travis-ci.org/unboundedsystems/relexer.svg?branch=master)](https://travis-ci.org/unboundedsystems/relexer)
+
 Regular Expression based lexing of Node.js streams
 
 [Relexer on GitHub](https://github.com/unboundedsystems/relexer)
