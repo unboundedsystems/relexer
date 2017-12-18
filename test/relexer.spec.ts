@@ -1,4 +1,4 @@
-import * as relexer from "..";
+import * as relexer from "../index";
 import * as sb from "stream-buffers";
 import * as util from 'util';
 import * as stream from 'stream';
