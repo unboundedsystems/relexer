@@ -147,6 +147,11 @@ class LexerImpl implements Lexer {
                 return;
             }
             buf += newChars;
+            //We must wait until the full aggregateUntil limit 
+            //to ensure the largest possible token matches.
+            if(buf.length < options.aggregateUntil) {
+                return;
+            }
 
             exp.lastIndex = 0; //parse from start of buf
 
@@ -158,6 +163,13 @@ class LexerImpl implements Lexer {
                 throw new LexError("No rule matched", offset, offset + buf.length, buf);
             }
         });
+
+        if(buf.length > 0) {
+            //Process any trailing chunk < aggregateUntil size
+            let consumed = await processChunk(exp, rules, offset, buf);
+            buf = buf.slice(consumed);
+            offset += consumed;
+        }
 
         if (buf.length === 0) {
             return;

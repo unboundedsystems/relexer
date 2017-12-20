@@ -257,7 +257,7 @@ describe('Quick Start Example', () => {
     }
 
     it('should work', async () => {
-        const s = new sb.ReadableStreamBuffer();
+        const s = new sb.ReadableStreamBuffer({ chunkSize: 1 });
         putOnTick(s, 'Hello, how are you today?');
         const toks = await example(s);
         toks.should.equal("[ 'Hello,', 'how', 'are', 'you', 'today?' ]");
