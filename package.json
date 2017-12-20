@@ -1,6 +1,6 @@
 {
   "name": "relexer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A regular expression based lexer for javascript and node.js streams",
   "main": "dist/index.js",
   "scripts": {
