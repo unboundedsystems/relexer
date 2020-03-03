@@ -13,14 +13,14 @@
   "author": "Manish Vachharajani <manishv@unbounded.systems>",
   "license": "ISC",
   "devDependencies": {
-    "@types/mocha": "^2.2.44",
+    "@types/mocha": "^5.2.7",
     "@types/node": "^8.0.53",
     "@types/should": "^11.2.0",
     "@types/stream-buffers": "^3.0.2",
-    "mocha": "^4.0.1",
+    "mocha": "^5.2.0",
     "should": "^13.1.3",
     "stream-buffers": "^3.0.1",
-    "tslint": "^5.8.0",
+    "tslint": "^5.20.1",
     "typescript": "^2.6.1"
   },
   "dependencies": {
