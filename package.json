@@ -13,15 +13,15 @@
   "author": "Manish Vachharajani <manishv@unbounded.systems>",
   "license": "ISC",
   "devDependencies": {
-    "@types/mocha": "^5.2.7",
-    "@types/node": "^8.0.53",
-    "@types/should": "^11.2.0",
-    "@types/stream-buffers": "^3.0.2",
-    "mocha": "^5.2.0",
-    "should": "^13.1.3",
-    "stream-buffers": "^3.0.1",
-    "tslint": "^5.20.1",
-    "typescript": "^2.6.1"
+    "@types/mocha": "5.2.7",
+    "@types/node": "8.0.56",
+    "@types/should": "11.2.0",
+    "@types/stream-buffers": "3.0.2",
+    "mocha": "5.2.0",
+    "should": "13.1.3",
+    "stream-buffers": "3.0.1",
+    "tslint": "5.20.1",
+    "typescript": "2.6.2"
   },
   "dependencies": {
     "make-error": "^1.3.0"
