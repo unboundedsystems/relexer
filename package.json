@@ -13,11 +13,11 @@
   "author": "Manish Vachharajani <manishv@unbounded.systems>",
   "license": "ISC",
   "devDependencies": {
-    "@types/mocha": "5.2.7",
+    "@types/mocha": "8.2.2",
     "@types/node": "8.0.56",
     "@types/should": "11.2.0",
     "@types/stream-buffers": "3.0.3",
-    "mocha": "5.2.0",
+    "mocha": "8.4.0",
     "should": "13.2.3",
     "stream-buffers": "3.0.2",
     "tslint": "5.20.1",
