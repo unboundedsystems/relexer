@@ -14,7 +14,7 @@
   "license": "ISC",
   "devDependencies": {
     "@types/mocha": "5.2.7",
-    "@types/node": "8.10.66",
+    "@types/node": "20.14.9",
     "@types/should": "11.2.0",
     "@types/stream-buffers": "3.0.7",
     "mocha": "5.2.0",
